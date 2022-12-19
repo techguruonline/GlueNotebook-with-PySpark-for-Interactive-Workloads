@@ -7,7 +7,7 @@
   },
   "command" : {
     "name" : "glueetl",
-    "scriptLocation" : ",
+    "scriptLocation" : "",
     "pythonVersion" : "3"
   },
   "defaultArguments" : {
