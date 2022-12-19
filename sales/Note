@@ -1,1 +1,3 @@
-sales.py is the Python code that Gule automatically generated based on the Notebook code
+sales.py is the Python code that AWS Glue automatically generated based on the Notebook code
+
+sales.json is also automatically created by AWS Glue which contains the Glue config that we set on the Notebook
