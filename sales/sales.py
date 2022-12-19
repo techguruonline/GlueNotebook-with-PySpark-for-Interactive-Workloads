@@ -46,13 +46,13 @@ product.show(10)
 joinedDyF = Join.apply(customer, Join.apply(sales, product, "product_id", "product_id"), "customer_id", "customer_id")
 # as the joined dyanmic frame will have wider columns from all the 3 dynamic frames, we will use a DynamicFrame class called "select_fields" to display only a set of selective fileds
 
-selectiveDyF = joinedDyF.select_fields(paths=["customer_id", "first_name", "last_name", "product_id", "product_desc", "quantity", "unit_price", "country", "invoice_no"])  
+selectColumnsDyF = joinedDyF.select_fields(paths=["customer_id", "first_name", "last_name", "product_id", "product_desc", "quantity", "unit_price", "country", "invoice_no"])  
 # Let's view the data and count
-selectiveDyF.show(10)
+selectColumnsDyF.show(10)
 
-print("Record count: ", selectiveDyF.count())
+print("Record count: ", selectColumnsDyF.count())
 # Now let's look at filtering the data, get the records which have country = 'United Kingdom"
-filteredDyF = Filter.apply(frame = selectiveDyF,
+filteredDyF = Filter.apply(frame = selectColumnsDyF,
                            f = lambda x: x["country"] in "United Kingdom"
                           )
 # Let's view the data and count
@@ -83,5 +83,58 @@ glueContext.write_dynamic_frame.from_options(
     format = "parquet"
 )
 # Now Let's conver the DynamicFrame to a DataFrame
-selectiveDF = selectiveDyF.toDF()
+salesDF = selectColumnsDyF.toDF()
+# Print Schema of the Spark DataFrame
+salesDF.printSchema()
+# Select columns from the DataFrame, unlike Glue DynamicFrame, the output of a DataFrame is in tabular format
+salesDF.select("customer_id","product_id","country").show()
+# Let's try adding, dropping, renaming columns and also perform some aggregate functions on the dataframe
+# We need to import additional libraries
+
+from pyspark.sql.functions import col
+# Add a new derived column to the DataFrame, let's call the new dervied column as "total_sales" which is derived by multipying quantity with unit_price for each transaction
+
+DerivedColDF = salesDF.withColumn("total_sales", col("quantity").cast("Integer") * col("unit_price").cast("Float"))
+DerivedColDF.show(10)
+#drop invoice number column from the DataFrame, am not storing this to a new variable, rather just showing how its done with Spark DataFrame
+DerivedColDF.drop("invoice_no").show(10)
+# Rename an existing column to a new name, am not storing this to a new variable, rather just showing how its done with Spark DataFrame
+DerivedColDF.withColumnRenamed("quantity","qty").show(10)
+# Spark provides powerful functions using which we can efficiently perform complex data analytics like aggregations, joins etc
+# With the sales DataFrame we have, we will perform data analysis by using aggregate function to see total sales by Customer, total sales by Customer by Product, total revenue by country.
+
+#Total sales by Customer, renamed aggregate column to a new name 
+totalSalesbyCustDF = DerivedColDF.groupBy("customer_id").sum("total_sales").withColumnRenamed("sum(total_sales)", "sum_sales")
+totalSalesbyCustDF.show(10)
+# Total sales by Customer by Product
+
+totalSalesbyCustProdDF = DerivedColDF.groupBy("customer_id", "product_id").sum("total_sales").withColumnRenamed("sum(total_sales)", "sum_sales")
+totalSalesbyCustProdDF.show(10)
+# Total sales by Country
+
+totalSalesbyCountryDF = DerivedColDF.groupBy("country").sum("total_sales").withColumnRenamed("sum(total_sales)", "sum_sales")
+totalSalesbyCountryDF.show(10)
+# Now let's filter the data from DataFrame, this is much straight forward to use where clause as with teh traditional SQL
+
+#Filter data by country = "United Kingdom"
+filteredDF = DerivedColDF.where("country == 'United Kingdom'")
+filteredDF.show(10)
+# First option to persist data to S3
+
+# Write dataframe directly to S3 as a Parquet file
+
+DerivedColDF.write.parquet("s3://redshift-spark-integration/data/tgt/data")
+# For simplicity and to write to Glue Data Catalog, we can convert the Spark DataFrame back to Glue DynamicFrame and write to either S3 directly or to Catalog
+
+# Conver back to DynamicFrame
+from awsglue.dynamicframe import DynamicFrame
+
+DerivedColDyF = DynamicFrame.fromDF(DerivedColDF,glueContext, "convert")
+# Write data to S3 using DynamicFrame
+
+glueContext.write_dynamic_frame_from_options(
+    frame=DerivedColDyF,
+    connection_type = "s3",
+    connection_options = {"path":"s3://redshift-spark-integration/data/tgt/"},
+    format = "parquet")
 job.commit()
