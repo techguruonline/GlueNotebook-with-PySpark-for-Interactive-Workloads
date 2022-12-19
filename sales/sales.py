@@ -79,7 +79,7 @@ mapDyF.show(10)
 glueContext.write_dynamic_frame.from_options(
     frame = mapDyF,
     connection_type = "s3",
-    connection_options = {"path":"<path>"},
+    connection_options = {"path":"s3://redshift-spark-integration/data/tgt/"},
     format = "parquet"
 )
 # Now Let's conver the DynamicFrame to a DataFrame
@@ -123,7 +123,7 @@ filteredDF.show(10)
 
 # Write dataframe directly to S3 as a Parquet file
 
-DerivedColDF.write.parquet("s3://<path>")
+DerivedColDF.write.parquet("s3://redshift-spark-integration/data/tgt/data")
 # For simplicity and to write to Glue Data Catalog, we can convert the Spark DataFrame back to Glue DynamicFrame and write to either S3 directly or to Catalog
 
 # Conver back to DynamicFrame
@@ -135,6 +135,10 @@ DerivedColDyF = DynamicFrame.fromDF(DerivedColDF,glueContext, "convert")
 glueContext.write_dynamic_frame_from_options(
     frame=DerivedColDyF,
     connection_type = "s3",
-    connection_options = {"path":"s3://<path>"},
+    connection_options = {"path":"s3://redshift-spark-integration/data/tgt/"},
     format = "parquet")
+glueContext.write_dynamic_frame.from_catalog(
+    frame=DerivedColDyF,
+    database = "retail_s3",
+    table_name = "tgt")
 job.commit()

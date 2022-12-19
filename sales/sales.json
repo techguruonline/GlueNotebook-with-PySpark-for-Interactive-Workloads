@@ -1,20 +1,20 @@
 {
   "name" : "sales",
   "description" : "",
-  "role" : "",
+  "role" : "arn:aws:iam::484830312924:role/Glue-admin-role-for-RS",
   "executionProperty" : {
     "maxConcurrentRuns" : 1
   },
   "command" : {
     "name" : "glueetl",
-    "scriptLocation" : "",
+    "scriptLocation" : "s3://aws-glue-assets-484830312924-us-east-1/scripts/sales.py",
     "pythonVersion" : "3"
   },
   "defaultArguments" : {
     "--encryption-type" : "sse-s3",
     "--enable-job-insights" : "false",
     "--job-language" : "python",
-    "--TempDir" : "",
+    "--TempDir" : "s3://aws-glue-assets-484830312924-us-east-1/temporary/",
     "--enable-glue-datacatalog" : "true",
     "library-set" : "analytics"
   },
