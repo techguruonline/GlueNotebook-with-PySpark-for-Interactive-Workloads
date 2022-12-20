@@ -1,0 +1,5 @@
+
+
+sales_redshift.py is the Python code that AWS Glue automatically generated based on the Notebook code
+
+sales_redshift.json is also automatically created by AWS Glue which contains the Glue config that we set on the Notebook
