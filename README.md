@@ -1,4 +1,4 @@
-# GlueNotebook-with-PySpark-for-Interactive-Workloads
+# GlueStudioNotebook-with-PySpark-for-Interactive-Workloads
 Demonstrate how to use Glue Notebook with PySpark for interactive workloads. Extraction, Transformation and loading with Glue DynamicFrame, seamlessly convert DynamicFrame to a Spark DataFrame, continue to transform data using DataFrame functions and convert back to DynamicFrame to continue with teh ETL or to write / persist data directly to S3 or through the Glue Catalog.
 
 Files & Folder Structure:
